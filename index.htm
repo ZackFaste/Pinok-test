@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+   <meta charset="UTF-8">
+   <title>ПІНОК ПІД ЗАД</title>
+   <style>
+    body{
+       font-family: sans-serif;
+       background: #f2f2f2;
+       margin: 0;
+       padding: 20px;
+    }
+
+    header{
+        background: #ff4b2b;
+        color: white;
+        padding: 20px;
+        text-align: center;
+        border-radius: 10px;
+    }
+
+    .post{
+        background: white;
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 15px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .add-btn{
+        display: inline-block;
+        margin-top: 20px;
+        background: #ff4b2b;
+        color: white;
+        padding: 10px 20px;
+        text-decoration: none;
+        border-radius: 5px;
+        font-weight: bold;
+    }
+
+    .add-btn:hover{
+        background: #e43f1a;
+    }
+    form {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  margin-top: 30px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+input, textarea {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-sizing: border-box;
+}
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🔥ПІНОК ПІД ЗАД</h1>
+        <p>Реальні поради, які врятують тобі нерви😅</p>
+    <div id="auth-buttons" style="margin-top: 10px;">
+        <button id="loginBtn" class="auth-btn">Увійти</button>
+        <button id="registerBtn" class="auth-btn">Зареєструватись</button>
+    </div>
+    </header>
+    <div id="filter">
+  <button class="filter-btn" data-category="all">Всі</button>
+  <button class="filter-btn" data-category="Переїзд">Переїзд</button>
+  <button class="filter-btn" data-category="Робота">Робота</button>
+  <button class="filter-btn" data-category="Навчання">Навчання</button>
+  <button class="filter-btn" data-category="Побачення">Побачення</button>
+  <button class="filter-btn" data-category="Виживання">Виживання</button>
+</div>
+
+    <div id="posts">
+        <div class="post">
+            <strong>💡Порада від Іри:</strong>
+            <p>Якщо щойно заїхав у квартиру — перевір лічильники і сфоткай все. Інакше платитимеш за сусідів!</p>
+        </div>
+        <div class="post">
+            <strong>💡Порада від Макса:</strong>
+            <p>На першій роботі ніколи не мовчи — став дурні питання. Це не тупо, це виживання 😎</p>
+        </div>
+    </div>
+
+    <h2>📝 Напиши свою пораду</h2>
+<<form id="adviceForm">
+  <input type="text" id="author" placeholder="Твоє ім’я або нік" required>
+  <br><br>
+  
+  <select id="category" required>
+    <option value="" disabled selected>Оберіть категорію</option>
+    <option value="Переїзд">Переїзд</option>
+    <option value="Робота">Робота</option>
+    <option value="Навчання">Навчання</option>
+    <option value="Побачення">Побачення</option>
+    <option value="Виживання">Виживання</option>
+  </select>
+  <br><br>
+
+  <textarea id="adviceText" placeholder="Твоя порада..." rows="4" required></textarea>
+  <br><br>
+  <button type="submit" class="add-btn">➕ Додати</button>
+</form>
+
+</form>
+
+<script>
+    const form = document.getElementById("adviceForm");
+const posts = document.getElementById("posts");
+
+// Функція для відображення поради на сторінці
+function addPost(author, advice, category) {
+  const newPost = document.createElement("div");
+  newPost.classList.add("post");
+  newPost.innerHTML = `
+    <strong>💡 Порада від ${author} (${category}):</strong>
+    <p>${advice}</p>
+  `;
+  posts.prepend(newPost);
+}
+
+
+// Зчитуємо поради з localStorage при завантаженні сторінки
+window.addEventListener("load", () => {
+  const savedAdvices = JSON.parse(localStorage.getItem("advices")) || [];
+  savedAdvices.forEach(item => {
+    addPost(item.author, item.advice, item.category);
+  });
+});
+
+form.addEventListener("submit", function(event) {
+  event.preventDefault();
+
+  const author = document.getElementById("author").value.trim();
+  const advice = document.getElementById("adviceText").value.trim();
+  const category = document.getElementById("category").value;
+
+  if (author && advice && category) {
+    addPost(author, advice, category);
+
+    const savedAdvices = JSON.parse(localStorage.getItem("advices")) || [];
+    savedAdvices.unshift({ author, advice, category });
+    localStorage.setItem("advices", JSON.stringify(savedAdvices));
+
+    form.reset();
+    const filterButtons = document.querySelectorAll(".filter-btn");
+
+filterButtons.forEach(button => {
+  button.addEventListener("click", () => {
+    // Прибираємо клас active з усіх кнопок
+    filterButtons.forEach(btn => btn.classList.remove("active"));
+    // Додаємо клас active натиснутій кнопці
+    button.classList.add("active");
+
+    const category = button.getAttribute("data-category");
+    filterPosts(category);
+  });
+});
+
+function filterPosts(category) {
+  const allPosts = document.querySelectorAll(".post");
+  allPosts.forEach(post => {
+    // Отримаємо категорію з тексту поради, вона в strong (наприклад: 💡 Порада від Іра (Виживання): )
+    const strong = post.querySelector("strong");
+    const text = strong.textContent;
+    
+    // Витягаємо категорію з дужок
+    const match = text.match(/\(([^)]+)\)/);
+    const postCategory = match ? match[1] : "";
+
+    if (category === "all" || postCategory === category) {
+      post.style.display = "block";
+    } else {
+      post.style.display = "none";
+    }
+  });
+}
+
+// За замовчуванням активуємо "Всі"
+document.querySelector('.filter-btn[data-category="all"]').classList.add("active");
+
+  }
+});
+const loginBtn = document.getElementById("loginBtn");
+const registerBtn = document.getElementById("registerBtn");
+const loginModal = document.getElementById("loginModal");
+const registerModal = document.getElementById("registerModal");
+const closeLogin = document.getElementById("closeLogin");
+const closeRegister = document.getElementById("closeRegister");
+
+// Відкриття модалок
+loginBtn.addEventListener("click", () => {
+  loginModal.style.display = "block";
+});
+registerBtn.addEventListener("click", () => {
+  registerModal.style.display = "block";
+});
+
+// Закриття модалок при натисканні х
+closeLogin.addEventListener("click", () => {
+  loginModal.style.display = "none";
+});
+closeRegister.addEventListener("click", () => {
+  registerModal.style.display = "none";
+});
+
+// Закриття при кліку поза модальним вікном
+window.addEventListener("click", (event) => {
+  if (event.target === loginModal) loginModal.style.display = "none";
+  if (event.target === registerModal) registerModal.style.display = "none";
+});
+document.getElementById("loginForm").addEventListener("submit", function(e) {
+  e.preventDefault();
+  alert("Успішний вхід! (Поки без авторизації)");
+  loginModal.style.display = "none";
+  this.reset();
+});
+
+document.getElementById("registerForm").addEventListener("submit", function(e) {
+  e.preventDefault();
+  const pass = document.getElementById("registerPassword").value;
+  const passConf = document.getElementById("registerPasswordConfirm").value;
+
+  if (pass !== passConf) {
+    alert("Паролі не співпадають!");
+    return;
+  }
+  alert("Успішна реєстрація! (Поки без збереження)");
+  registerModal.style.display = "none";
+  this.reset();
+});
+
+
+</script>
+<!-- Модальне вікно для логіну -->
+<div id="loginModal" class="modal">
+  <div class="modal-content">
+    <span class="close" id="closeLogin">&times;</span>
+    <h2>Увійти</h2>
+    <form id="loginForm">
+      <input type="text" id="loginUsername" placeholder="Логін" required>
+      <br><br>
+      <input type="password" id="loginPassword" placeholder="Пароль" required>
+      <br><br>
+      <button type="submit" class="add-btn">Увійти</button>
+    </form>
+  </div>
+</div>
+
+<!-- Модальне вікно для реєстрації -->
+<div id="registerModal" class="modal">
+  <div class="modal-content">
+    <span class="close" id="closeRegister">&times;</span>
+    <h2>Зареєструватись</h2>
+    <form id="registerForm">
+      <input type="text" id="registerUsername" placeholder="Логін" required>
+      <br><br>
+      <input type="password" id="registerPassword" placeholder="Пароль" required>
+      <br><br>
+      <input type="password" id="registerPasswordConfirm" placeholder="Підтвердження паролю" required>
+      <br><br>
+      <button type="submit" class="add-btn">Зареєструватись</button>
+    </form>
+  </div>
+</div>
+
+</body>
+</html>
